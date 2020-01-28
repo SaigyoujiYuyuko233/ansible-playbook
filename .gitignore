@@ -87,3 +87,7 @@ CVS
 *.mode2v3
 *.perspectivev3
 xcuserdata/
+
+# ansible
+hosts
+ansible.cfg
