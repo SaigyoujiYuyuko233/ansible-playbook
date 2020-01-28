@@ -28,6 +28,7 @@ tags
 *.iml
 *.ipr
 *.iws
+.vscode/
 .idea/
 out/
 local.properties
