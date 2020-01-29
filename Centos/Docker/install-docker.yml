@@ -49,9 +49,6 @@
         state: started
       register: docker_service
 
-    - name: "Docker install Successfully"
-      command: "echo uuz, nice!"
-
     - fail:
         msg: We tried to install Docker but Docker service is not running!
       when: docker_service.status.SubState != "running"
