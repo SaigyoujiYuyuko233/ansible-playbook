@@ -1,0 +1,57 @@
+---
+- hosts: all
+  remote_user: root
+  tasks:
+    - name: "Uninstall old docker"
+      yum:
+        name: 
+          - "docker"
+          - "docker-client"
+          - "docker-client-latest"
+          - "docker-common"
+          - "docker-latest"
+          - "docker-latest-logrotate"
+          - "docker-logrotate"
+          - "docker-engine"
+
+        state: absent
+
+    - name: "Add yum docker repo"
+      yum_repository:
+        name: docker-ce-stable
+        description: Docker CE Stable
+        baseurl: https://mirrors.aliyun.com/docker-ce/linux/centos/7/$basearch/stable
+        gpgkey: https://mirrors.aliyun.com/docker-ce/linux/centos/gpg
+        gpgcheck: yes
+    
+    - name: "Install docker dependences"
+      yum:
+        name: 
+          - "device-mapper-persistent-data"
+          - "lvm2"
+        
+        state: latest
+    
+    - name: "Install docker"
+      yum:
+        name: docker-ce
+        state: latest
+    
+    - name: "Enable docker"
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: "Check status of Docker service"
+      systemd:
+        name: docker
+        state: started
+      register: docker_service
+
+    - name: "Docker install Successfully"
+      command: "echo uuz, nice!"
+
+    - fail:
+        msg: We tried to install Docker but Docker service is not running!
+      when: docker_service.status.SubState != "running"
