@@ -1,0 +1,49 @@
+---
+
+- hosts: all
+  remote_user: root
+
+  tasks: 
+
+    - name: Install py-pip
+      yum:
+        name: python-pip
+        state: latest
+    
+    - name: Install Ansible dependence
+      pip:
+        name: PyMySQL
+
+    - name: Install MariaDB
+      yum:
+        name: 
+          - mariadb
+          - mariadb-server
+          - mariadb-libs
+          - mariadb-devel
+        state: latest
+
+    - name: Copy the config file
+      template:
+        src: "{{ playbook_dir }}/../files/mariadb/mariadb-server.cnf.j2"
+        dest: /etc/my.cnf.d/mariadb-server.cnf
+        owner: root
+        mode: 0755
+
+    - name: Change mode and relationship of MariaDB data dir
+      file:
+        path: "{{ datadir }}"
+        owner: mysql
+        group: mysql
+        mode: '0775'
+
+    - name: Start MariaDB service
+      systemd:
+        name: mariadb
+        state: started
+        enabled: yes
+
+    - name: Set the password of root
+      mysql_user:
+        name: root
+        password: "{{ mysql_root_password }}"
