@@ -1,0 +1,34 @@
+--- 
+  - name: "Prepara/Checking Docker environment"
+    import_playbook: install-docker.yml
+
+  - hosts: all
+    remote_user: root
+
+    tasks:
+      - name: Create docker user
+        user:
+          name: docker
+          group: docker
+          home: /home/docker
+
+      - name: Copy the authorized keys key from Root
+        command: cat /root/.ssh/authorized_keys
+        register: authorized_keys
+
+      - name: Get authorized keys from Root
+        authorized_key:
+          user: docker
+          key: "{{ authorized_keys.stdout }}"
+
+      - name: Restart docker service
+        systemd:
+          name: docker
+          state: restarted
+          daemon_reload: yes
+      
+      - name: Restart sshd service
+        systemd:
+          name: sshd
+          state: restarted
+          daemon_reload: yes
