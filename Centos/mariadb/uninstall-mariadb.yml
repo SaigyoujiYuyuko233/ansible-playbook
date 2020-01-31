@@ -1,0 +1,40 @@
+---
+
+- hosts: all
+  remote_user: root
+  vars:
+    uninstall_clear: "{{ hostvars[inventory_hostname].uninstall_clear }}"
+  
+  tasks:
+
+    - name: Uninstall maraidb
+      yum: 
+        name: 
+          - mariadb
+          - mariadb-server
+          - mariadb-libs
+          - mariadb-devel
+        state: absent
+
+    - name: Collect MariaDB data files
+      find:
+        paths: 
+          - "{{ datadir }}"
+          - /etc/my.cnf
+          - /etc/my.cnf.d
+        file_type: any
+      register: maraidb_data
+
+    - name: Delete MariaDB files
+      file: 
+        name: "{{ item.path }}"
+        state: absent
+      with_items: "{{ maraidb_data.files }}"
+      when: uninstall_clear == "yes"
+
+    - name: delete MariaDB user
+      user:
+        name: mysql
+        group: mysql
+        state: absent
+        remove: yes

@@ -1,0 +1,90 @@
+---
+
+- hosts: all
+  remote_user: root
+
+  vars:
+    enable_remote_access: "{{ hostvars[inventory_hostname].enable_remote_access }}"
+
+  tasks: 
+
+    - name: Install py-pip
+      yum:
+        name: python-pip
+        state: latest
+    
+    - name: Install Ansible dependence
+      pip:
+        name: PyMySQL
+
+    - name: "Add yum MariaDB repo"
+      yum_repository:
+        name: MariaDB
+        description: MariaDB
+        baseurl: http://mirrors.ustc.edu.cn/mariadb/yum/10.4/centos7-amd64/
+        gpgkey: http://mirrors.ustc.edu.cn/mariadb/yum/RPM-GPG-KEY-MariaDB
+        gpgcheck: yes
+
+    - name: Install MariaDB
+      yum:
+        name: 
+          - mariadb
+          - mariadb-server
+          - mariadb-libs
+          - mariadb-devel
+        state: latest
+
+    - name: Copy the config file
+      template:
+        src: "{{ playbook_dir }}/../../files/mariadb/mariadb-server.cnf.j2"
+        dest: /etc/my.cnf.d/mariadb-server.cnf
+        owner: root
+        mode: 0755
+    
+    - name: "Init MariaDB: mysql_install_db"
+      command: /usr/bin/mysql_install_db
+      register: init_db
+      become_user: mysql
+
+    - name: "Init MariaDB: create /run/mariadb"
+      file:
+        owner: mysql
+        group: mysql
+        mode: '0775'
+        name: /run/mariadb
+        state: directory
+    
+    - name: "Init MariaDB: create /var/log/mariadb"
+      file:
+        owner: mysql
+        group: mysql
+        mode: '0775'
+        name: /var/log/mariadb
+        state: directory
+
+    - name: Change mode and relationship of MariaDB data dir
+      file:
+        path: "{{ datadir }}"
+        owner: mysql
+        group: mysql
+        mode: '0775'
+        recurse: yes
+
+    - name: Start MariaDB service
+      systemd:
+        name: mariadb
+        state: started
+        enabled: yes
+
+    - name: "Init MariaDB: Set the password of root"
+      command: "mysqladmin -u root password {{ mysql_root_password }}"
+
+    - name: Set remote root password
+      mysql_user:
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+        name: root
+        host: "%"
+        priv: '*.*:ALL,GRANT'
+        password: "{{ mysql_root_password }}"
+      when: enable_remote_access == "yes"
