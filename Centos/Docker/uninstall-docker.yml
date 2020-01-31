@@ -5,28 +5,28 @@
 
   tasks: 
 
-  - name: uninstall docker
-    yum: 
-      name: 
-        - device-mapper-persistent-data 
-        - lvm2
-        - docker-ce
-        - docker-ce-*
-      state: absent
+    - name: uninstall docker
+      yum: 
+        name: 
+          - device-mapper-persistent-data 
+          - lvm2
+          - docker-ce
+          - docker-ce-*
+        state: absent
 
-  - name: delete docker files
-    file: 
-      name: /var/lib/docker
-      state: absent
-  
-  - name: delete docker user
-    user:
-      name: docker
-      group: docker
-      state: absent
-      remove: yes
+    - name: delete docker files
+      file: 
+        name: /var/lib/docker
+        state: absent
+    
+    - name: delete docker user
+      user:
+        name: docker
+        group: docker
+        state: absent
+        remove: yes
 
-  - name: delete docker user file
-    file: 
-      name: /home/docker
-      state: absent
+    - name: delete docker user file
+      file: 
+        name: /home/docker
+        state: absent
